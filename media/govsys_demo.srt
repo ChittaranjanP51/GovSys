@@ -1,0 +1,107 @@
+1
+00:00:00,506 --> 00:00:08,311
+This is GovSys, a multi-agent AI assistant I built for a fifty-person company, where every single request is governed.
+
+2
+00:00:08,311 --> 00:00:12,809
+It runs entirely on open-source tools, in Docker, on my own machine.
+
+3
+00:00:12,808 --> 00:00:15,718
+I'll sign in as Alice from customer support.
+
+4
+00:00:15,719 --> 00:00:17,835
+Her login goes through Keycloak.
+
+5
+00:00:18,447 --> 00:00:20,785
+Let's ask for the status of an order.
+
+6
+00:00:20,784 --> 00:00:36,073
+A supervisor agent routes it to the order agent, and before anything runs, seven checks fire: identity, input guardrails, model approval, the agent's own signed identity, tool authorization, least-privilege data access, and output guardrails.
+
+7
+00:00:36,073 --> 00:00:37,147
+All seven passed.
+
+8
+00:00:37,754 --> 00:00:38,980
+Now something harder.
+
+9
+00:00:38,980 --> 00:00:40,790
+Cancel an order, and refund it.
+
+10
+00:00:40,790 --> 00:00:44,936
+The order agent cancels it, then hands the refund to the billing agent.
+
+11
+00:00:44,935 --> 00:00:52,584
+But support staff are not allowed to issue refunds, so the policy engine blocks that tool call before it ever touches the database.
+
+12
+00:00:53,185 --> 00:00:55,321
+What about a prompt-injection attack?
+
+13
+00:00:55,320 --> 00:00:58,725
+The input guardrails stop it before the model ever sees it.
+
+14
+00:00:59,339 --> 00:01:00,913
+Now I'm Bob, from finance.
+
+15
+00:01:00,912 --> 00:01:07,026
+He can read invoices, but the card number is masked, because his role has no access to personal data.
+
+16
+00:01:07,026 --> 00:01:11,384
+And a three-hundred-dollar refund is above his two-hundred-dollar limit.
+
+17
+00:01:11,384 --> 00:01:11,868
+Blocked.
+
+18
+00:01:24,387 --> 00:01:27,317
+Carol is an admin, so she gets the governance screens.
+
+19
+00:01:27,316 --> 00:01:34,207
+The monitor shows every request, where it was blocked, and a hash-chained audit log that proves nothing has been tampered with.
+
+20
+00:01:34,815 --> 00:01:38,816
+Only models approved in the MLflow registry are allowed to answer.
+
+21
+00:01:38,816 --> 00:01:41,604
+The rejected model is gated out automatically.
+
+22
+00:01:42,219 --> 00:01:46,677
+With one click, the red-team suite throws eighteen attacks at the system.
+
+23
+00:01:46,677 --> 00:01:51,685
+Forged agent identities, SQL injection, privilege escalation, audit-log tampering.
+
+24
+00:01:51,684 --> 00:01:55,348
+Every single one is blocked by the control built to stop it.
+
+25
+00:01:55,954 --> 00:02:06,061
+Finally, a compliance report generated straight from live evidence, and mapped to the NIST AI Risk Management Framework, ISO 42001, and the EU AI Act.
+
+26
+00:02:06,060 --> 00:02:08,755
+AI governance doesn't have to be theory.
+
+27
+00:02:08,756 --> 00:02:11,384
+This is what it looks like in practice.

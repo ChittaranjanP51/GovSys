@@ -1,0 +1,172 @@
+{
+  "realm": "govsys",
+  "enabled": true,
+  "displayName": "GovSys",
+  "accessTokenLifespan": 3600,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "passwordPolicy": "length(7) and upperCase(1) and digits(1) and specialChars(1)",
+  "roles": {
+    "realm": [
+      {
+        "name": "support",
+        "description": "GovSys support role"
+      },
+      {
+        "name": "intern",
+        "description": "GovSys intern role"
+      },
+      {
+        "name": "finance",
+        "description": "GovSys finance role"
+      },
+      {
+        "name": "finance_manager",
+        "description": "GovSys finance_manager role"
+      },
+      {
+        "name": "admin",
+        "description": "GovSys admin role"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "govsys-app",
+      "name": "GovSys dashboard",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "http://localhost:8501/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8501"
+      ],
+      "defaultClientScopes": [
+        "profile",
+        "roles",
+        "email",
+        "basic"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Fernandes",
+      "email": "alice@govsys.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Alice@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "support"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Nair",
+      "email": "bob@govsys.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Bob@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "finance"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "fiona",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Fiona",
+      "lastName": "Kapoor",
+      "email": "fiona@govsys.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Fiona@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "finance",
+        "finance_manager"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "carol",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Carol",
+      "lastName": "Dsouza",
+      "email": "carol@govsys.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Carol@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "ian",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Ian",
+      "lastName": "Thomas",
+      "email": "ian@govsys.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Ian@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "intern"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "mallory",
+      "enabled": false,
+      "emailVerified": true,
+      "firstName": "Mallory",
+      "lastName": "Singh",
+      "email": "mallory@govsys.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Mallory@123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "support"
+      ],
+      "requiredActions": []
+    }
+  ]
+}

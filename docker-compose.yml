@@ -1,0 +1,155 @@
+# GovSys full stack (Docker mode)
+#
+#   .\docker-up.ps1                        -> build + start everything (uses the host's Ollama)
+#   .\docker-up.ps1 -OllamaInDocker        -> also run Ollama in a container and pull the models
+#   .\docker-down.ps1 [-Wipe]              -> stop (and optionally delete all data volumes)
+#
+# Plain compose works too:  docker compose up -d --build
+#
+# UIs (bound to localhost only):
+#   app http://localhost:8501 · Keycloak http://localhost:8080 (admin / admin)
+#   MLflow http://localhost:5000 · Langfuse http://localhost:3000 (admin@govsys.local / govsys-admin)
+#   OPA http://localhost:8181 · Postgres localhost:5433
+#
+# Variables below are read from a `.env` file next to this file, if present. They use a
+# DOCKER_ prefix so the local-mode settings in the same .env (127.0.0.1 addresses etc.)
+# can never leak into the containers.
+name: govsys
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${DOCKER_PG_SUPERPASS:-govsys_admin_pw}
+    ports: ["127.0.0.1:5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 30
+
+  opa:
+    image: openpolicyagent/opa:latest
+    command: ["run", "--server", "--addr", "0.0.0.0:8181", "--watch", "/policies"]
+    volumes: ["./infra/opa/policies:/policies:ro"]
+    ports: ["127.0.0.1:8181:8181"]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${DOCKER_KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+    volumes: ["./infra/keycloak:/opt/keycloak/data/import:ro"]
+    ports: ["127.0.0.1:8080:8080"]
+
+  # Built from the app image so the MLflow server and client versions always match.
+  mlflow:
+    build: .
+    image: govsys-app:latest
+    command: >
+      mlflow server --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts --serve-artifacts
+      --host 0.0.0.0 --port 5000 --allowed-hosts mlflow:5000,localhost:5000,127.0.0.1:5000
+    environment:
+      MLFLOW_DISABLE_TELEMETRY: "true"
+      DO_NOT_TRACK: "1"
+    volumes: [mlflowdata:/mlflow]
+    ports: ["127.0.0.1:5000:5000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 10s
+      retries: 30
+
+  langfuse-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse
+      POSTGRES_DB: langfuse
+    volumes: [langfusedata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 5s
+      retries: 30
+
+  langfuse:
+    image: langfuse/langfuse:2
+    depends_on:
+      langfuse-db: {condition: service_healthy}
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${DOCKER_LANGFUSE_NEXTAUTH_SECRET:-change-me-nextauth}
+      SALT: ${DOCKER_LANGFUSE_SALT:-change-me-salt}
+      TELEMETRY_ENABLED: "false"
+      # Headless init: organisation, project, API keys and an admin user on first start
+      LANGFUSE_INIT_ORG_ID: govsys
+      LANGFUSE_INIT_ORG_NAME: GovSys
+      LANGFUSE_INIT_PROJECT_ID: govsys
+      LANGFUSE_INIT_PROJECT_NAME: GovSys
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${DOCKER_LANGFUSE_PUBLIC_KEY:-pk-lf-govsys-local}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${DOCKER_LANGFUSE_SECRET_KEY:-sk-lf-govsys-local}
+      LANGFUSE_INIT_USER_EMAIL: admin@govsys.local
+      LANGFUSE_INIT_USER_NAME: GovSys Admin
+      LANGFUSE_INIT_USER_PASSWORD: ${DOCKER_LANGFUSE_ADMIN_PASSWORD:-govsys-admin}
+    ports: ["127.0.0.1:3000:3000"]
+
+  # Optional: Ollama inside Docker (profile "ollama"). Otherwise the host's Ollama is used.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    volumes: [ollamadata:/root/.ollama]
+    ports: ["127.0.0.1:11435:11434"]   # 11435 so it never clashes with a host Ollama
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    depends_on: [ollama]
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["sh", "-c", "sleep 5 && ollama pull phi3:latest && ollama pull gemma3:270m"]
+    restart: "no"
+
+  app:
+    build: .
+    image: govsys-app:latest
+    depends_on:
+      postgres: {condition: service_healthy}
+      mlflow: {condition: service_healthy}
+      opa: {condition: service_started}
+      keycloak: {condition: service_started}
+      langfuse: {condition: service_started}
+    environment:
+      GOVSYS_MODE: docker
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_SUPERPASS: ${DOCKER_PG_SUPERPASS:-govsys_admin_pw}
+      OPA_URL: http://opa:8181
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      IDENTITY_PROVIDER: ${DOCKER_IDENTITY_PROVIDER:-keycloak}
+      KEYCLOAK_URL: http://keycloak:8080
+      OLLAMA_URL: ${DOCKER_OLLAMA_URL:-http://host.docker.internal:11434}
+      LLM_ENABLED: ${DOCKER_LLM_ENABLED:-true}
+      LANGFUSE_HOST: http://langfuse:3000
+      LANGFUSE_PUBLIC_KEY: ${DOCKER_LANGFUSE_PUBLIC_KEY:-pk-lf-govsys-local}
+      LANGFUSE_SECRET_KEY: ${DOCKER_LANGFUSE_SECRET_KEY:-sk-lf-govsys-local}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    command: >
+      sh -c "python scripts/wait_for.py && python scripts/bootstrap.py &&
+             exec streamlit run app/streamlit_app.py --server.port 8501 --server.address 0.0.0.0"
+    ports: ["127.0.0.1:8501:8501"]
+    volumes: [appdata:/app/data, ./logs/docker:/app/logs, ./reports/docker:/app/reports]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 10s
+      start_period: 60s
+      retries: 30
+
+volumes:
+  pgdata:
+  mlflowdata:
+  langfusedata:
+  ollamadata:
+  appdata:

@@ -1,0 +1,29 @@
+# --- Agent runtime ---
+langgraph>=0.2
+httpx>=0.27
+
+# --- Data layer ---
+psycopg[binary]>=3.2
+
+# --- Identity ---
+pyjwt[crypto]>=2.8
+cryptography>=42
+
+# --- Model governance ---
+mlflow>=2.14
+
+# --- Runtime guardrails ---
+guardrails-ai>=0.5
+
+# --- Observability ---
+langfuse>=2.60,<3        # v2 SDK matches the lightweight Langfuse v2 server in docker-compose
+
+# --- UI / reporting ---
+streamlit>=1.38
+pandas>=2.2
+plotly>=5.22
+python-dotenv>=1.0
+
+# --- Tests ---
+pytest>=8
+markdown>=3.6

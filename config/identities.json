@@ -1,0 +1,11 @@
+{
+  "_comment": "DEMO principals for local mode only. scripts/bootstrap.py hashes these passwords (PBKDF2) into data/idp/users.json; the IdP never reads plaintext. In docker/keycloak mode the same users are defined in infra/keycloak/govsys-realm.json.",
+  "users": [
+    {"username": "alice",   "password": "Alice@123",   "name": "Alice Fernandes", "department": "Customer Support", "roles": ["support"],                   "status": "active"},
+    {"username": "bob",     "password": "Bob@123",     "name": "Bob Nair",        "department": "Finance",          "roles": ["finance"],                   "status": "active"},
+    {"username": "fiona",   "password": "Fiona@123",   "name": "Fiona Kapoor",    "department": "Finance",          "roles": ["finance", "finance_manager"],"status": "active"},
+    {"username": "carol",   "password": "Carol@123",   "name": "Carol Dsouza",    "department": "Platform / IT",    "roles": ["admin"],                     "status": "active"},
+    {"username": "ian",     "password": "Ian@123",     "name": "Ian Thomas",      "department": "Customer Support", "roles": ["intern"],                    "status": "active"},
+    {"username": "mallory", "password": "Mallory@123", "name": "Mallory Singh",   "department": "Customer Support", "roles": ["support"],                   "status": "suspended"}
+  ]
+}

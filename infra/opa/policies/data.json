@@ -1,0 +1,49 @@
+{
+  "govsys": {
+    "roles": {
+      "support": {
+        "agents": ["order", "billing"],
+        "permissions": ["order.lookup", "order.customer_orders", "order.update_status", "billing.get_invoice", "pii.read"]
+      },
+      "intern": {
+        "agents": ["order"],
+        "permissions": ["order.lookup"]
+      },
+      "finance": {
+        "agents": ["billing"],
+        "permissions": ["billing.get_invoice", "billing.issue_refund", "billing.refund_history"]
+      },
+      "finance_manager": {
+        "agents": ["billing"],
+        "permissions": ["billing.get_invoice", "billing.issue_refund", "billing.refund_history", "pii.read"]
+      },
+      "admin": {
+        "agents": ["order", "billing", "admin"],
+        "permissions": [
+          "order.lookup", "order.customer_orders", "order.update_status",
+          "billing.get_invoice", "billing.refund_history",
+          "admin.list_staff", "admin.audit_summary", "pii.read"
+        ]
+      }
+    },
+    "agents": {
+      "supervisor": {"spiffe_id": "spiffe://govsys.local/agent/supervisor", "tools": []},
+      "order":      {"spiffe_id": "spiffe://govsys.local/agent/order",
+                     "tools": ["order.lookup", "order.customer_orders", "order.update_status"]},
+      "billing":    {"spiffe_id": "spiffe://govsys.local/agent/billing",
+                     "tools": ["billing.get_invoice", "billing.issue_refund", "billing.refund_history"]},
+      "admin":      {"spiffe_id": "spiffe://govsys.local/agent/admin",
+                     "tools": ["admin.list_staff", "admin.audit_summary"]}
+    },
+    "handoffs": {
+      "supervisor": ["order", "billing", "admin"],
+      "order": ["billing"],
+      "billing": [],
+      "admin": []
+    },
+    "limits": {
+      "refund_auto_approve": 200,
+      "agent_settable_status": ["cancelled", "returned"]
+    }
+  }
+}
